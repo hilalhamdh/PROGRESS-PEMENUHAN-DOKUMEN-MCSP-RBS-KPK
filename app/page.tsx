@@ -12,6 +12,7 @@ import {
   Info,
   X,
   ChevronDown,
+  ListFilter,
 } from "lucide-react";
 
 // Data sumber (hasil konversi PROGRES_per_24_Agustus_2026.xlsx)
@@ -95,6 +96,8 @@ export default function ProgresDokumenPage() {
   // "" berarti belum ada pilihan / semua data (tidak difilter berdasarkan kolom ini)
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
+  // Menu filter ketiga — disiapkan untuk kebutuhan filter berikutnya, isinya masih kosong
+  const [allFilter, setAllFilter] = useState<string>("");
 
   // Daftar pilihan Area Intervensi, unik & terurut abjad
   const areaOptions = useMemo(() => {
@@ -111,6 +114,9 @@ export default function ProgresDokumenPage() {
       a.localeCompare(b)
     );
   }, [data, areaFilter]);
+
+  // Daftar pilihan untuk menu filter ketiga — sengaja dikosongkan dulu
+  const allOptions = useMemo(() => [] as string[], []);
 
   const handleAreaChange = (value: string) => {
     setAreaFilter(value);
@@ -136,7 +142,8 @@ export default function ProgresDokumenPage() {
     });
   }, [data, searchTerm, areaFilter, opdFilter]);
 
-  const isFiltering = searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "";
+  const isFiltering =
+    searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "" || allFilter !== "";
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -168,6 +175,7 @@ export default function ProgresDokumenPage() {
     setSearchTerm("");
     setAreaFilter("");
     setOpdFilter("");
+    setAllFilter("");
   };
 
   return (
@@ -184,7 +192,7 @@ export default function ProgresDokumenPage() {
             />
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800 sm:text-base">
-                Inspektorat Kabupaten Deiyai
+              Inspektorat Kabupaten Deiyai
               </h2>
               <p className="text-xs font-medium uppercase tracking-wide text-indigo-600 sm:text-sm">
                 Monitoring Center for Prevention (MCSP) - RBS KPK
@@ -209,7 +217,9 @@ export default function ProgresDokumenPage() {
                   Progress Pemenuhan Dokumen MCSP-RBS KPK
                   <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
                 </h1>
-                
+                <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
+                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 24 Agustus 2026"}
+                </p>
               </div>
             </div>
           </div>
@@ -239,7 +249,7 @@ export default function ProgresDokumenPage() {
             icon={<CheckCircle2 className="h-5 w-5" />}
             gradient="from-emerald-500 to-teal-500"
             label="Hasil Ditemukan"
-            value={isFiltering ? filteredData.length : data.length}
+            value={isFiltering ? filteredData.length : 0}
           />
         </div>
 
@@ -266,11 +276,26 @@ export default function ProgresDokumenPage() {
               )}
             </div>
 
-          
+            {/* <button
+              onClick={exportToExcel}
+              disabled={filteredData.length === 0}
+              className="flex shrink-0 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none"
+            >
+              <Download className="h-4 w-4" />
+              Unduh Excel
+            </button> */}
           </div>
 
-          {/* Filter Dropdown — Area Intervensi & OPD */}
-          <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
+          {/* Filter Dropdown — Semua (menu ketiga) ditaruh di awal, lalu Area Intervensi & OPD */}
+          <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
+            {/* <FilterSelect
+              icon={<ListFilter className="h-4 w-4" />}
+              label="Filter Semua"
+              value={allFilter}
+              placeholder="Semua"
+              options={allOptions}
+              onChange={setAllFilter}
+            /> */}
             <FilterSelect
               icon={<Layers className="h-4 w-4" />}
               label="Filter Area Intervensi"
@@ -301,7 +326,25 @@ export default function ProgresDokumenPage() {
           )}
         </div>
 
-        {/* Tabel Data */}
+        {/* Tampilan 1: Belum Melakukan Pencarian / Filter */}
+        {!isFiltering && (
+          <div className="space-y-3 rounded-lg border border-dashed border-indigo-200 bg-white/70 p-14 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/25">
+              <Search className="h-7 w-7" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">
+              Ketik Kata Kunci atau Pilih Filter Untuk Menampilkan Data
+            </h3>
+            <p className="mx-auto max-w-md text-sm text-slate-500">
+              Silakan ketikkan kata kunci pada kolom pencarian, atau pilih{" "}
+              <strong className="text-slate-700">Area Intervensi</strong> /{" "}
+              <strong className="text-slate-700">OPD</strong> pada menu filter di atas.
+            </p>
+          </div>
+        )}
+
+        {/* Tampilan 2: Tabel Hasil Pencarian / Filter */}
+        {isFiltering && (
         <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_40px_-20px_rgba(15,23,42,0.16)]">
           <div
             ref={scrollRef}
@@ -401,13 +444,13 @@ export default function ProgresDokumenPage() {
 
           <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 px-6 py-3 text-xs text-slate-500">
             <span>
-              Menampilkan{" "}
+              Ditemukan{" "}
               <strong className="font-semibold text-indigo-700">{filteredData.length}</strong>{" "}
-              dari <strong className="font-semibold text-slate-700">{data.length}</strong> total
-              item dokumen
+              baris data yang cocok
             </span>
           </div>
         </div>
+        )}
       </div>
     </main>
   );
