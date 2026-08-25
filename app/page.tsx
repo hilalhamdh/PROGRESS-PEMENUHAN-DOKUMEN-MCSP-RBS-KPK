@@ -268,14 +268,7 @@ export default function ProgresDokumenPage() {
               )}
             </div>
 
-            <button
-              onClick={exportToExcel}
-              disabled={filteredData.length === 0}
-              className="flex shrink-0 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none"
-            >
-              <Download className="h-4 w-4" />
-              Unduh Excel
-            </button>
+          
           </div>
 
           {/* Filter Dropdown — Area Intervensi & OPD */}
