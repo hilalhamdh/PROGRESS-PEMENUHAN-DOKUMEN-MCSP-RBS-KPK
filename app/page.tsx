@@ -209,9 +209,7 @@ export default function ProgresDokumenPage() {
                   Progress Pemenuhan Dokumen MCSP-RBS KPK
                   <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
                 </h1>
-                <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
-                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 24 Agustus 2026"}
-                </p>
+                
               </div>
             </div>
           </div>
