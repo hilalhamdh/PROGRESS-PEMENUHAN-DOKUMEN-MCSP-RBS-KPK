@@ -6,13 +6,12 @@ import {
   Search,
   Download,
   ClipboardList,
+  Layers,
+  Building2,
   CheckCircle2,
-  Clock,
-  Wrench,
-  AlertTriangle,
-  FileSearch,
   Info,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 // Data sumber (hasil konversi PROGRES_per_24_Agustus_2026.xlsx)
@@ -27,8 +26,8 @@ export interface ProgresRecord {
   progress_per_24_agustus_2026: string;
 }
 
-// Kategori status hasil pengelompokan teks bebas pada kolom
-// "PROGRESS PER 24 AGUSTUS 2026"
+// Kategori status hanya dipakai untuk mewarnai badge di kolom Progress,
+// bukan lagi untuk memfilter (filter sekarang berdasarkan Area Intervensi & OPD)
 type StatusKey =
   | "DITERIMA"
   | "DISIAPKAN"
@@ -40,10 +39,6 @@ type StatusKey =
   | "SEBAGIAN"
   | "LAINNYA";
 
-type StatusFilter = "ALL" | StatusKey;
-
-// Mengelompokkan teks progres bebas menjadi kategori status yang konsisten.
-// Urutan pengecekan penting: kategori yang lebih spesifik dicek lebih dulu.
 function classifyStatus(progress: string): StatusKey {
   const t = (progress || "").toUpperCase();
   if (t.includes("SUDAH DITERIMA")) return "DITERIMA";
@@ -57,79 +52,16 @@ function classifyStatus(progress: string): StatusKey {
   return "LAINNYA";
 }
 
-const STATUS_CONFIG: Record<StatusKey, { label: string; badge: string; dot: string }> = {
-  DITERIMA: {
-    label: "Sudah Diterima",
-    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    dot: "bg-emerald-500",
-  },
-  DISIAPKAN: {
-    label: "Sedang Disiapkan",
-    badge: "border-sky-200 bg-sky-50 text-sky-700",
-    dot: "bg-sky-500",
-  },
-  PERBAIKAN: {
-    label: "Dalam Perbaikan",
-    badge: "border-amber-200 bg-amber-50 text-amber-700",
-    dot: "bg-amber-500",
-  },
-  REVIU: {
-    label: "Proses Reviu",
-    badge: "border-violet-200 bg-violet-50 text-violet-700",
-    dot: "bg-violet-500",
-  },
-  BELUM: {
-    label: "Belum Ada Progres",
-    badge: "border-rose-200 bg-rose-50 text-rose-700",
-    dot: "bg-rose-500",
-  },
-  TTD: {
-    label: "Menunggu Tanda Tangan Pejabat",
-    badge: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
-    dot: "bg-fuchsia-500",
-  },
-  SURAT_BELUM: {
-    label: "Surat Pernyataan Belum Diterima",
-    badge: "border-orange-200 bg-orange-50 text-orange-700",
-    dot: "bg-orange-500",
-  },
-  SEBAGIAN: {
-    label: "Sebagian Sudah Diupload",
-    badge: "border-teal-200 bg-teal-50 text-teal-700",
-    dot: "bg-teal-500",
-  },
-  LAINNYA: {
-    label: "Link Pengaduan Sudah Ada",
-    badge: "border-slate-200 bg-slate-50 text-slate-600",
-    dot: "bg-slate-400",
-  },
-};
-
-const FILTER_TABS: { key: StatusFilter; label: string }[] = [
-  { key: "ALL", label: "Semua Data" },
-  { key: "DITERIMA", label: "Sudah Diterima" },
-  { key: "DISIAPKAN", label: "Sedang Disiapkan" },
-  { key: "PERBAIKAN", label: "Dalam Perbaikan" },
-  { key: "REVIU", label: "Proses Reviu" },
-  { key: "BELUM", label: "Belum Ada Progres" },
-  { key: "TTD", label: "Menunggu Tanda Tangan Pejabat" },
-  { key: "SURAT_BELUM", label: "Surat Pernyataan Belum Diterima" },
-  { key: "SEBAGIAN", label: "Sebagian Sudah Diupload" },
-  { key: "LAINNYA", label: "Link Pengaduan Sudah Ada" },
-];
-
-// Gradient pill per kategori, dipakai untuk state aktif pada filter & kartu statistik
-const PILL_GRADIENT: Record<StatusFilter, string> = {
-  ALL: "from-indigo-500 to-blue-500",
-  DITERIMA: "from-emerald-500 to-teal-500 shadow-emerald-500/25",
-  DISIAPKAN: "from-sky-500 to-cyan-500 shadow-sky-500/25",
-  PERBAIKAN: "from-amber-500 to-orange-500 shadow-amber-500/25",
-  REVIU: "from-violet-500 to-purple-500 shadow-violet-500/25",
-  BELUM: "from-rose-500 to-red-500 shadow-rose-500/25",
-  TTD: "from-fuchsia-500 to-pink-500 shadow-fuchsia-500/25",
-  SURAT_BELUM: "from-orange-500 to-amber-600 shadow-orange-500/25",
-  SEBAGIAN: "from-teal-500 to-emerald-600 shadow-teal-500/25",
-  LAINNYA: "from-slate-400 to-slate-500 shadow-slate-400/25",
+const STATUS_CONFIG: Record<StatusKey, { badge: string; dot: string }> = {
+  DITERIMA: { badge: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
+  DISIAPKAN: { badge: "border-sky-200 bg-sky-50 text-sky-700", dot: "bg-sky-500" },
+  PERBAIKAN: { badge: "border-amber-200 bg-amber-50 text-amber-700", dot: "bg-amber-500" },
+  REVIU: { badge: "border-violet-200 bg-violet-50 text-violet-700", dot: "bg-violet-500" },
+  BELUM: { badge: "border-rose-200 bg-rose-50 text-rose-700", dot: "bg-rose-500" },
+  TTD: { badge: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700", dot: "bg-fuchsia-500" },
+  SURAT_BELUM: { badge: "border-orange-200 bg-orange-50 text-orange-700", dot: "bg-orange-500" },
+  SEBAGIAN: { badge: "border-teal-200 bg-teal-50 text-teal-700", dot: "bg-teal-500" },
+  LAINNYA: { badge: "border-slate-200 bg-slate-50 text-slate-600", dot: "bg-slate-400" },
 };
 
 export default function ProgresDokumenPage() {
@@ -160,26 +92,31 @@ export default function ProgresDokumenPage() {
   };
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  // "" berarti belum ada pilihan / semua data (tidak difilter berdasarkan kolom ini)
+  const [areaFilter, setAreaFilter] = useState<string>("");
+  const [opdFilter, setOpdFilter] = useState<string>("");
 
-  // Hitung jumlah data per kategori status (untuk badge di setiap pill & kartu statistik)
-  const statusCounts = useMemo(() => {
-    const counts: Record<StatusKey, number> = {
-      DITERIMA: 0,
-      DISIAPKAN: 0,
-      PERBAIKAN: 0,
-      REVIU: 0,
-      BELUM: 0,
-      TTD: 0,
-      SURAT_BELUM: 0,
-      SEBAGIAN: 0,
-      LAINNYA: 0,
-    };
-    data.forEach((item) => {
-      counts[classifyStatus(item.progress_per_24_agustus_2026)] += 1;
-    });
-    return counts;
+  // Daftar pilihan Area Intervensi, unik & terurut abjad
+  const areaOptions = useMemo(() => {
+    return Array.from(new Set(data.map((d) => d.area_intervensi).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b)
+    );
   }, [data]);
+
+  // Daftar pilihan OPD — mengikuti Area Intervensi yang sedang dipilih (cascading),
+  // supaya pilihan OPD yang muncul relevan dengan area yang aktif
+  const opdOptions = useMemo(() => {
+    const source = areaFilter ? data.filter((d) => d.area_intervensi === areaFilter) : data;
+    return Array.from(new Set(source.map((d) => d.opd).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b)
+    );
+  }, [data, areaFilter]);
+
+  const handleAreaChange = (value: string) => {
+    setAreaFilter(value);
+    // reset OPD saat area berubah, karena daftar OPD ikut berubah
+    setOpdFilter("");
+  };
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -192,14 +129,14 @@ export default function ProgresDokumenPage() {
             item.data_dokumen_yg_diperlukan?.toLowerCase().includes(q) ||
             item.progress_per_24_agustus_2026?.toLowerCase().includes(q);
 
-      const matchesStatus =
-        statusFilter === "ALL" ? true : classifyStatus(item.progress_per_24_agustus_2026) === statusFilter;
+      const matchesArea = areaFilter === "" ? true : item.area_intervensi === areaFilter;
+      const matchesOpd = opdFilter === "" ? true : item.opd === opdFilter;
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesArea && matchesOpd;
     });
-  }, [data, searchTerm, statusFilter]);
+  }, [data, searchTerm, areaFilter, opdFilter]);
 
-  const isFiltering = searchTerm.trim().length > 0 || statusFilter !== "ALL";
+  const isFiltering = searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "";
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -229,7 +166,8 @@ export default function ProgresDokumenPage() {
 
   const resetFilter = () => {
     setSearchTerm("");
-    setStatusFilter("ALL");
+    setAreaFilter("");
+    setOpdFilter("");
   };
 
   return (
@@ -246,7 +184,7 @@ export default function ProgresDokumenPage() {
             />
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800 sm:text-base">
-                Pemerintah Kabupaten Deiyai
+                Inspektorat Kabupaten Deiyai
               </h2>
               <p className="text-xs font-medium uppercase tracking-wide text-indigo-600 sm:text-sm">
                 Monitoring Center for Prevention (MCSP) - RBS KPK
@@ -271,63 +209,39 @@ export default function ProgresDokumenPage() {
                   Progress Pemenuhan Dokumen MCSP-RBS KPK
                   <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
                 </h1>
-                {/* <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
+                <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
                   {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 24 Agustus 2026"}
-                </p> */}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Ringkasan Statistik (klik untuk memfilter tabel) */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {/* Ringkasan Statistik */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
             icon={<ClipboardList className="h-5 w-5" />}
             gradient="from-indigo-500 to-blue-500"
             label="Total Item"
             value={data.length}
-            active={statusFilter === "ALL"}
-            onClick={() => setStatusFilter("ALL")}
+          />
+          <StatCard
+            icon={<Layers className="h-5 w-5" />}
+            gradient="from-violet-500 to-purple-500"
+            label="Area Intervensi"
+            value={areaOptions.length}
+          />
+          <StatCard
+            icon={<Building2 className="h-5 w-5" />}
+            gradient="from-sky-500 to-cyan-500"
+            label="OPD Terlibat"
+            value={Array.from(new Set(data.map((d) => d.opd))).length}
           />
           <StatCard
             icon={<CheckCircle2 className="h-5 w-5" />}
             gradient="from-emerald-500 to-teal-500"
-            label="Sudah Diterima"
-            value={statusCounts.DITERIMA}
-            active={statusFilter === "DITERIMA"}
-            onClick={() => setStatusFilter("DITERIMA")}
-          />
-          <StatCard
-            icon={<Clock className="h-5 w-5" />}
-            gradient="from-sky-500 to-cyan-500"
-            label="Sedang Disiapkan"
-            value={statusCounts.DISIAPKAN}
-            active={statusFilter === "DISIAPKAN"}
-            onClick={() => setStatusFilter("DISIAPKAN")}
-          />
-          <StatCard
-            icon={<Wrench className="h-5 w-5" />}
-            gradient="from-amber-500 to-orange-500"
-            label="Dalam Perbaikan"
-            value={statusCounts.PERBAIKAN}
-            active={statusFilter === "PERBAIKAN"}
-            onClick={() => setStatusFilter("PERBAIKAN")}
-          />
-          <StatCard
-            icon={<FileSearch className="h-5 w-5" />}
-            gradient="from-violet-500 to-purple-500"
-            label="Proses Reviu"
-            value={statusCounts.REVIU}
-            active={statusFilter === "REVIU"}
-            onClick={() => setStatusFilter("REVIU")}
-          />
-          <StatCard
-            icon={<AlertTriangle className="h-5 w-5" />}
-            gradient="from-rose-500 to-red-500"
-            label="Belum Ada Progres"
-            value={statusCounts.BELUM}
-            active={statusFilter === "BELUM"}
-            onClick={() => setStatusFilter("BELUM")}
+            label="Hasil Ditemukan"
+            value={isFiltering ? filteredData.length : data.length}
           />
         </div>
 
@@ -354,45 +268,46 @@ export default function ProgresDokumenPage() {
               )}
             </div>
 
-            {/* <button
+            <button
               onClick={exportToExcel}
               disabled={filteredData.length === 0}
               className="flex shrink-0 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none"
             >
               <Download className="h-4 w-4" />
               Unduh Excel
-            </button> */}
+            </button>
           </div>
 
-          {/* Filter Status Progress — pill berwarna, berdasarkan kolom PROGRESS PER 24 AGUSTUS 2026 */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-            <div className="flex flex-wrap gap-2">
-              {FILTER_TABS.map((tab) => (
-                <FilterPill
-                  key={tab.key}
-                  active={statusFilter === tab.key}
-                  onClick={() => setStatusFilter(tab.key)}
-                  colorClass={PILL_GRADIENT[tab.key]}
-                >
-                  {tab.label}
-                  {tab.key !== "ALL" && (
-                    <span className="ml-1.5 opacity-80">
-                      ({statusCounts[tab.key as StatusKey]})
-                    </span>
-                  )}
-                </FilterPill>
-              ))}
-            </div>
+          {/* Filter Dropdown — Area Intervensi & OPD */}
+          <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
+            <FilterSelect
+              icon={<Layers className="h-4 w-4" />}
+              label="Filter Area Intervensi"
+              value={areaFilter}
+              placeholder="Semua Area Intervensi"
+              options={areaOptions}
+              onChange={handleAreaChange}
+            />
+            <FilterSelect
+              icon={<Building2 className="h-4 w-4" />}
+              label="Filter OPD"
+              value={opdFilter}
+              placeholder="Semua OPD"
+              options={opdOptions}
+              onChange={setOpdFilter}
+            />
+          </div>
 
-            {isFiltering && (
+          {isFiltering && (
+            <div className="flex justify-end border-t border-slate-100 pt-3">
               <button
                 onClick={resetFilter}
                 className="text-xs font-semibold text-rose-500 transition hover:text-rose-600 hover:underline"
               >
                 Reset Filter
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Tabel Data */}
@@ -512,23 +427,14 @@ function StatCard({
   gradient,
   label,
   value,
-  active,
-  onClick,
 }: {
   icon: React.ReactNode;
   gradient: string;
   label: string;
   value: React.ReactNode;
-  active?: boolean;
-  onClick?: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-3 rounded-xl border bg-white p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_26px_-16px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_32px_-14px_rgba(79,70,229,0.20)] ${
-        active ? "border-indigo-300 ring-2 ring-indigo-500/15" : "border-slate-200/70"
-      }`}
-    >
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200/70 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_26px_-16px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_32px_-14px_rgba(79,70,229,0.20)]">
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md ${gradient}`}
       >
@@ -538,31 +444,50 @@ function StatCard({
         <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
         <p className="text-xl font-extrabold text-slate-900">{value}</p>
       </div>
-    </button>
+    </div>
   );
 }
 
-function FilterPill({
-  active,
-  onClick,
-  colorClass,
-  children,
+function FilterSelect({
+  icon,
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
 }: {
-  active: boolean;
-  onClick: () => void;
-  colorClass: string;
-  children: React.ReactNode;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  placeholder: string;
+  options: string[];
+  onChange: (value: string) => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`cursor-pointer rounded-lg px-4 py-2 text-xs font-semibold transition ${
-        active
-          ? `bg-gradient-to-r text-white shadow-md ${colorClass}`
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-      }`}
-    >
-      {children}
-    </button>
+    <div>
+      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {icon}
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full appearance-none rounded-sm border bg-slate-50 py-2.5 pl-3 pr-9 text-sm font-medium transition focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
+            value
+              ? "border-indigo-300 text-indigo-700"
+              : "border-slate-200 text-slate-500"
+          }`}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      </div>
+    </div>
   );
 }
