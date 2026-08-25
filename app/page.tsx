@@ -27,8 +27,7 @@ export interface ProgresRecord {
   progress_per_24_agustus_2026: string;
 }
 
-// Kategori status hanya dipakai untuk mewarnai badge di kolom Progress,
-// bukan lagi untuk memfilter (filter sekarang berdasarkan Area Intervensi & OPD)
+// Kategori status dipakai untuk mewarnai badge di kolom Progress
 type StatusKey =
   | "DITERIMA"
   | "DISIAPKAN"
@@ -96,8 +95,8 @@ export default function ProgresDokumenPage() {
   // "" berarti belum ada pilihan / semua data (tidak difilter berdasarkan kolom ini)
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
-  // Menu filter ketiga — disiapkan untuk kebutuhan filter berikutnya, isinya masih kosong
-  const [allFilter, setAllFilter] = useState<string>("");
+  // Filter baru: berdasarkan kolom "Progress per 24 Agustus 2026"
+  const [progressFilter, setProgressFilter] = useState<string>("");
 
   // Daftar pilihan Area Intervensi, unik & terurut abjad
   const areaOptions = useMemo(() => {
@@ -115,13 +114,29 @@ export default function ProgresDokumenPage() {
     );
   }, [data, areaFilter]);
 
-  // Daftar pilihan untuk menu filter ketiga — sengaja dikosongkan dulu
-  const allOptions = useMemo(() => [] as string[], []);
+  // Daftar pilihan Progress — mengikuti Area Intervensi & OPD yang sedang dipilih (cascading)
+  const progressOptions = useMemo(() => {
+    const source = data.filter((d) => {
+      const matchesArea = areaFilter ? d.area_intervensi === areaFilter : true;
+      const matchesOpd = opdFilter ? d.opd === opdFilter : true;
+      return matchesArea && matchesOpd;
+    });
+    return Array.from(
+      new Set(source.map((d) => d.progress_per_24_agustus_2026).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [data, areaFilter, opdFilter]);
 
   const handleAreaChange = (value: string) => {
     setAreaFilter(value);
-    // reset OPD saat area berubah, karena daftar OPD ikut berubah
+    // reset OPD & Progress saat area berubah, karena daftar pilihannya ikut berubah
     setOpdFilter("");
+    setProgressFilter("");
+  };
+
+  const handleOpdChange = (value: string) => {
+    setOpdFilter(value);
+    // reset Progress saat OPD berubah, karena daftar pilihannya ikut berubah
+    setProgressFilter("");
   };
 
   const filteredData = useMemo(() => {
@@ -137,13 +152,18 @@ export default function ProgresDokumenPage() {
 
       const matchesArea = areaFilter === "" ? true : item.area_intervensi === areaFilter;
       const matchesOpd = opdFilter === "" ? true : item.opd === opdFilter;
+      const matchesProgress =
+        progressFilter === "" ? true : item.progress_per_24_agustus_2026 === progressFilter;
 
-      return matchesSearch && matchesArea && matchesOpd;
+      return matchesSearch && matchesArea && matchesOpd && matchesProgress;
     });
-  }, [data, searchTerm, areaFilter, opdFilter]);
+  }, [data, searchTerm, areaFilter, opdFilter, progressFilter]);
 
   const isFiltering =
-    searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "" || allFilter !== "";
+    searchTerm.trim().length > 0 ||
+    areaFilter !== "" ||
+    opdFilter !== "" ||
+    progressFilter !== "";
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -175,7 +195,7 @@ export default function ProgresDokumenPage() {
     setSearchTerm("");
     setAreaFilter("");
     setOpdFilter("");
-    setAllFilter("");
+    setProgressFilter("");
   };
 
   return (
@@ -286,16 +306,8 @@ export default function ProgresDokumenPage() {
             </button> */}
           </div>
 
-          {/* Filter Dropdown — Semua (menu ketiga) ditaruh di awal, lalu Area Intervensi & OPD */}
+          {/* Filter Dropdown — Area Intervensi, OPD, Progress */}
           <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
-            {/* <FilterSelect
-              icon={<ListFilter className="h-4 w-4" />}
-              label="Filter Semua"
-              value={allFilter}
-              placeholder="Semua"
-              options={allOptions}
-              onChange={setAllFilter}
-            /> */}
             <FilterSelect
               icon={<Layers className="h-4 w-4" />}
               label="Filter Area Intervensi"
@@ -310,7 +322,15 @@ export default function ProgresDokumenPage() {
               value={opdFilter}
               placeholder="Semua OPD"
               options={opdOptions}
-              onChange={setOpdFilter}
+              onChange={handleOpdChange}
+            />
+            <FilterSelect
+              icon={<ListFilter className="h-4 w-4" />}
+              label="Filter Progress per 24 Agustus 2026"
+              value={progressFilter}
+              placeholder="Semua Progress"
+              options={progressOptions}
+              onChange={setProgressFilter}
             />
           </div>
 
@@ -337,8 +357,9 @@ export default function ProgresDokumenPage() {
             </h3>
             <p className="mx-auto max-w-md text-sm text-slate-500">
               Silakan ketikkan kata kunci pada kolom pencarian, atau pilih{" "}
-              <strong className="text-slate-700">Area Intervensi</strong> /{" "}
-              <strong className="text-slate-700">OPD</strong> pada menu filter di atas.
+              <strong className="text-slate-700">Area Intervensi</strong>,{" "}
+              <strong className="text-slate-700">OPD</strong>, atau{" "}
+              <strong className="text-slate-700">Progress</strong> pada menu filter di atas.
             </p>
           </div>
         )}
