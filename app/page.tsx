@@ -63,11 +63,21 @@ function classifyStatus(progress: string): StatusKey {
 }
 
 const STATUS_CONFIG: Record<StatusKey, { badge: string; dot: string }> = {
-  DITERIMA: { badge: "border-green-300 bg-green-100 text-green-800", dot: "bg-green-500" },
-  PROSES: { badge: "border-yellow-300 bg-yellow-100 text-yellow-800", dot: "bg-yellow-400" },
-  PERBAIKAN: { badge: "border-orange-300 bg-orange-100 text-orange-800", dot: "bg-orange-500" },
-  TERLAMBAT: { badge: "border-red-300 bg-red-100 text-red-800", dot: "bg-red-600" },
+  DITERIMA: { badge: "border-green-300 bg-green-50 text-green-500", dot: "bg-green-500" },
+  PROSES: { badge: "border-yellow-300 bg-yellow-50 text-yellow-500", dot: "bg-yellow-400" },
+  PERBAIKAN: { badge: "border-orange-300 bg-orange-50 text-orange-500", dot: "bg-orange-500" },
+  TERLAMBAT: { badge: "border-red-300 bg-red-50 text-red-500", dot: "bg-red-600" },
   LAINNYA: { badge: "border-slate-200 bg-slate-50 text-slate-600", dot: "bg-slate-400" },
+};
+
+// Warna hex per kategori — dipakai untuk mewarnai teks pada dropdown filter Progress
+// Disesuaikan dengan warna terang pada gambar Keterangan Warna
+const STATUS_HEX: Record<StatusKey, { bg: string; text: string; border: string }> = {
+  DITERIMA: { bg: "#dcfce7", text: "#22c55e", border: "#4ade80" },
+  PROSES: { bg: "#fef9c3", text: "#eab308", border: "#facc15" },
+  PERBAIKAN: { bg: "#ffedd5", text: "#f97316", border: "#fb923c" },
+  TERLAMBAT: { bg: "#fee2e2", text: "#ef4444", border: "#f87171" },
+  LAINNYA: { bg: "#f8fafc", text: "#475569", border: "#e2e8f0" },
 };
 
 export default function ProgresDokumenPage() {
@@ -368,6 +378,7 @@ export default function ProgresDokumenPage() {
               placeholder="Semua Progress"
               options={progressOptions}
               onChange={handleProgressChange}
+              getOptionColor={(opt) => STATUS_HEX[classifyStatus(opt)]}
             />
           </div>
 
@@ -547,6 +558,7 @@ function FilterSelect({
   placeholder,
   options,
   onChange,
+  getOptionColor,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -554,7 +566,12 @@ function FilterSelect({
   placeholder: string;
   options: string[];
   onChange: (value: string) => void;
+  // Opsional: kembalikan warna (bg/text/border) untuk sebuah opsi, dipakai untuk mewarnai
+  // <option> di dalam dropdown sekaligus kotak <select> saat opsi tsb sedang dipilih
+  getOptionColor?: (option: string) => { bg: string; text: string; border: string } | undefined;
 }) {
+  const selectedColor = value ? getOptionColor?.(value) : undefined;
+
   return (
     <div>
       <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -565,20 +582,29 @@ function FilterSelect({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full appearance-none rounded-sm border bg-slate-50 py-2.5 pl-3 pr-9 text-sm font-medium transition focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
-            value
+          style={selectedColor ? { color: selectedColor.text, borderColor: selectedColor.border } : undefined}
+          className={`w-full appearance-none rounded-sm border bg-slate-50 py-2.5 pl-3 pr-9 text-sm font-semibold transition focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
+            selectedColor
+              ? ""
+              : value
               ? "border-indigo-300 text-indigo-700"
-              : "border-slate-200 text-slate-500"
+              : "border-slate-200 text-slate-500 font-medium"
           }`}
         >
           <option value="">{placeholder}</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
+          {options.map((opt) => {
+            const c = getOptionColor?.(opt);
+            return (
+              <option key={opt} value={opt} style={c ? { color: c.text } : undefined}>
+                {opt}
+              </option>
+            );
+          })}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <ChevronDown
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2"
+          style={{ color: selectedColor ? selectedColor.text : undefined }}
+        />
       </div>
     </div>
   );
