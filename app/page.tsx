@@ -50,14 +50,14 @@ function classifyStatus(progress: string): StatusKey {
     t.includes("SURAT PERNYATAAN BELUM DI TERIMA")
   )
     return "TERLAMBAT";
-  if (t.includes("PERBAIKAN") || t.includes("REVIU") || t.includes("PERLU PERBAIKAN"))
+  if (t.includes("PERBAIKAN") || t.includes("PERLU PERBAIKAN") || t.includes("SUDAH ADA"))
     return "PERBAIKAN";
   if (
     t.includes("SEDANG DISIAPKAN") ||
     t.includes("DALAM PROSES") ||
     t.includes("SEBAGIAN DATA") ||
     t.includes("SEBAGIAN DOKUMEN") ||
-    t.includes("SUDAH ADA")
+    t.includes("REVIU")
   )
     return "PROSES";
   return "LAINNYA";
