@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import {
   Search,
@@ -371,7 +371,7 @@ export default function ProgresDokumenPage() {
               options={opdOptions}
               onChange={handleOpdChange}
             />
-            <FilterSelect
+            <ColorSelect
               icon={<ListFilter className="h-4 w-4" />}
               label="Filter Progress per 24 Agustus 2026"
               value={progressFilter}
@@ -547,6 +547,93 @@ function StatCard({
         <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
         <p className="text-xl font-extrabold text-slate-900">{value}</p>
       </div>
+    </div>
+  );
+}
+
+function ColorSelect({
+  icon,
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
+  getOptionColor,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  placeholder: string;
+  options: string[];
+  onChange: (value: string) => void;
+  getOptionColor: (option: string) => { bg: string; text: string; border: string } | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const selectedColor = value ? getOptionColor(value) : undefined;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {icon}
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={selectedColor ? { color: selectedColor.text, borderColor: selectedColor.border } : undefined}
+        className={`flex w-full items-center justify-between rounded-sm border bg-slate-50 py-2.5 pl-3 pr-3 text-left text-sm font-semibold transition focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
+          selectedColor ? "" : value ? "border-indigo-300 text-indigo-700" : "border-slate-200 text-slate-500 font-medium"
+        }`}
+      >
+        <span className="truncate">{value || placeholder}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          style={{ color: selectedColor ? selectedColor.text : undefined }}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-sm border border-slate-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className="block w-full px-3 py-2 text-left text-sm font-medium text-slate-500 hover:bg-slate-50"
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => {
+            const c = getOptionColor(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                style={c ? { color: c.text } : undefined}
+                className="block w-full px-3 py-2 text-left text-sm font-semibold hover:bg-slate-50"
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
