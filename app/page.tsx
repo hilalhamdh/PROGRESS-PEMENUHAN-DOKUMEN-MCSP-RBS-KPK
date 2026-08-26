@@ -27,40 +27,46 @@ export interface ProgresRecord {
   progress_per_24_agustus_2026: string;
 }
 
-// Kategori status dipakai untuk mewarnai badge di kolom Progress
-type StatusKey =
-  | "DITERIMA"
-  | "DISIAPKAN"
-  | "PERBAIKAN"
-  | "REVIU"
-  | "BELUM"
-  | "TTD"
-  | "SURAT_BELUM"
-  | "SEBAGIAN"
-  | "LAINNYA";
+// Kategori status dipakai untuk mewarnai badge di kolom Progress,
+// mengikuti 4 kategori pada Keterangan Warna:
+// Hijau = Diterima, Kuning = Dalam Proses, Oranye = Perlu Perbaikan, Merah = Melewati Waktu
+type StatusKey = "DITERIMA" | "PROSES" | "PERBAIKAN" | "TERLAMBAT" | "LAINNYA";
+
+const STATUS_LEGEND: { key: StatusKey; label: string; swatch: string }[] = [
+  { key: "DITERIMA", label: "DOKUMEN TELAH DITERIMA", swatch: "bg-green-500" },
+  { key: "PROSES", label: "DOKUMEN DALAM PROSES", swatch: "bg-yellow-400" },
+  { key: "PERBAIKAN", label: "DOKUMEN PERLU PERBAIKAN", swatch: "bg-orange-500" },
+  { key: "TERLAMBAT", label: "MELEWATI WAKTU YANG DISEPAKATI", swatch: "bg-red-600" },
+];
 
 function classifyStatus(progress: string): StatusKey {
   const t = (progress || "").toUpperCase();
-  if (t.includes("SUDAH DITERIMA")) return "DITERIMA";
-  if (t.includes("SEDANG DISIAPKAN")) return "DISIAPKAN";
-  if (t.includes("MENUNGGU TANDA TANGAN")) return "TTD";
-  if (t.includes("SURAT PERNYATAAN BELUM DI TERIMA")) return "SURAT_BELUM";
-  if (t.includes("SEBAGIAN DATA") || t.includes("SEBAGIAN DOKUMEN")) return "SEBAGIAN";
-  if (t.includes("PERBAIKAN")) return "PERBAIKAN";
-  if (t.includes("REVIU")) return "REVIU";
-  if (t.includes("BELUM ADA")) return "BELUM";
+  if (t.includes("SUDAH DITERIMA") || t.includes("TELAH DITERIMA")) return "DITERIMA";
+  if (
+    t.includes("MELEWATI WAKTU") ||
+    t.includes("TERLAMBAT") ||
+    t.includes("BELUM ADA") ||
+    t.includes("MENUNGGU TANDA TANGAN") ||
+    t.includes("SURAT PERNYATAAN BELUM DI TERIMA")
+  )
+    return "TERLAMBAT";
+  if (t.includes("PERBAIKAN") || t.includes("REVIU") || t.includes("PERLU PERBAIKAN"))
+    return "PERBAIKAN";
+  if (
+    t.includes("SEDANG DISIAPKAN") ||
+    t.includes("DALAM PROSES") ||
+    t.includes("SEBAGIAN DATA") ||
+    t.includes("SEBAGIAN DOKUMEN")
+  )
+    return "PROSES";
   return "LAINNYA";
 }
 
 const STATUS_CONFIG: Record<StatusKey, { badge: string; dot: string }> = {
-  DITERIMA: { badge: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
-  DISIAPKAN: { badge: "border-sky-200 bg-sky-50 text-sky-700", dot: "bg-sky-500" },
-  PERBAIKAN: { badge: "border-amber-200 bg-amber-50 text-amber-700", dot: "bg-amber-500" },
-  REVIU: { badge: "border-violet-200 bg-violet-50 text-violet-700", dot: "bg-violet-500" },
-  BELUM: { badge: "border-rose-200 bg-rose-50 text-rose-700", dot: "bg-rose-500" },
-  TTD: { badge: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700", dot: "bg-fuchsia-500" },
-  SURAT_BELUM: { badge: "border-orange-200 bg-orange-50 text-orange-700", dot: "bg-orange-500" },
-  SEBAGIAN: { badge: "border-teal-200 bg-teal-50 text-teal-700", dot: "bg-teal-500" },
+  DITERIMA: { badge: "border-green-300 bg-green-100 text-green-800", dot: "bg-green-500" },
+  PROSES: { badge: "border-yellow-300 bg-yellow-100 text-yellow-800", dot: "bg-yellow-400" },
+  PERBAIKAN: { badge: "border-orange-300 bg-orange-100 text-orange-800", dot: "bg-orange-500" },
+  TERLAMBAT: { badge: "border-red-300 bg-red-100 text-red-800", dot: "bg-red-600" },
   LAINNYA: { badge: "border-slate-200 bg-slate-50 text-slate-600", dot: "bg-slate-400" },
 };
 
@@ -92,11 +98,14 @@ export default function ProgresDokumenPage() {
   };
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  // "" berarti belum ada pilihan / semua data (tidak difilter berdasarkan kolom ini)
+  // "" berarti tidak membatasi data berdasarkan kolom ini (mis. "Semua Area Intervensi")
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
   // Filter baru: berdasarkan kolom "Progress per 24 Agustus 2026"
   const [progressFilter, setProgressFilter] = useState<string>("");
+  // Menandai apakah user sudah pernah berinteraksi (ketik cari / pilih dropdown apapun,
+  // termasuk memilih "Semua ..."), supaya bisa dibedakan dari kondisi awal belum pilih apa-apa
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
 
   // Daftar pilihan Area Intervensi, unik & terurut abjad
   const areaOptions = useMemo(() => {
@@ -127,6 +136,7 @@ export default function ProgresDokumenPage() {
   }, [data, areaFilter, opdFilter]);
 
   const handleAreaChange = (value: string) => {
+    setHasInteracted(true);
     setAreaFilter(value);
     // reset OPD & Progress saat area berubah, karena daftar pilihannya ikut berubah
     setOpdFilter("");
@@ -134,9 +144,20 @@ export default function ProgresDokumenPage() {
   };
 
   const handleOpdChange = (value: string) => {
+    setHasInteracted(true);
     setOpdFilter(value);
     // reset Progress saat OPD berubah, karena daftar pilihannya ikut berubah
     setProgressFilter("");
+  };
+
+  const handleProgressChange = (value: string) => {
+    setHasInteracted(true);
+    setProgressFilter(value);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setHasInteracted(true);
+    setSearchTerm(value);
   };
 
   const filteredData = useMemo(() => {
@@ -159,11 +180,9 @@ export default function ProgresDokumenPage() {
     });
   }, [data, searchTerm, areaFilter, opdFilter, progressFilter]);
 
-  const isFiltering =
-    searchTerm.trim().length > 0 ||
-    areaFilter !== "" ||
-    opdFilter !== "" ||
-    progressFilter !== "";
+  // Tabel ditampilkan begitu user pernah berinteraksi (ketik cari / pilih dropdown apapun),
+  // termasuk saat memilih "Semua ..." yang nilainya kembali kosong
+  const isFiltering = hasInteracted;
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -196,6 +215,7 @@ export default function ProgresDokumenPage() {
     setAreaFilter("");
     setOpdFilter("");
     setProgressFilter("");
+    setHasInteracted(false);
   };
 
   return (
@@ -273,6 +293,23 @@ export default function ProgresDokumenPage() {
           />
         </div>
 
+        {/* Keterangan Warna */}
+        {/* <div className="rounded-sm border border-slate-200/70 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-5">
+          <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-slate-700">
+            Keterangan Warna :
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {STATUS_LEGEND.map((item) => (
+              <div key={item.key} className="flex items-center gap-2.5">
+                <span className={`h-5 w-8 shrink-0 rounded-sm border border-black/10 ${item.swatch}`} />
+                <span className="text-[11px] font-semibold text-slate-700 sm:text-xs">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div> */}
+
         {/* Input Pencarian & Filter */}
         <div className="space-y-4 rounded-sm border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_32px_-18px_rgba(15,23,42,0.14)] sm:p-6">
           <div className="flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center">
@@ -282,12 +319,12 @@ export default function ProgresDokumenPage() {
                 type="text"
                 placeholder="Cari Area Intervensi, OPD, atau Dokumen..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full rounded-sm border border-slate-200 bg-slate-50 py-3 pl-11 pr-10 text-sm font-medium text-slate-800 placeholder:font-normal placeholder:text-slate-400 transition focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm("")}
+                  onClick={() => handleSearchChange("")}
                   aria-label="Hapus pencarian"
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
                 >
@@ -330,7 +367,7 @@ export default function ProgresDokumenPage() {
               value={progressFilter}
               placeholder="Semua Progress"
               options={progressOptions}
-              onChange={setProgressFilter}
+              onChange={handleProgressChange}
             />
           </div>
 
