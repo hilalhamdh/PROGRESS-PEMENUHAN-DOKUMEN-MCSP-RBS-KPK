@@ -56,7 +56,8 @@ function classifyStatus(progress: string): StatusKey {
     t.includes("SEDANG DISIAPKAN") ||
     t.includes("DALAM PROSES") ||
     t.includes("SEBAGIAN DATA") ||
-    t.includes("SEBAGIAN DOKUMEN")
+    t.includes("SEBAGIAN DOKUMEN") ||
+    t.includes("SUDAH ADA")
   )
     return "PROSES";
   return "LAINNYA";
@@ -133,31 +134,20 @@ export default function ProgresDokumenPage() {
     );
   }, [data, areaFilter]);
 
-  // Daftar pilihan Progress — mengikuti Area Intervensi & OPD yang sedang dipilih (cascading)
-  const progressOptions = useMemo(() => {
-    const source = data.filter((d) => {
-      const matchesArea = areaFilter ? d.area_intervensi === areaFilter : true;
-      const matchesOpd = opdFilter ? d.opd === opdFilter : true;
-      return matchesArea && matchesOpd;
-    });
-    return Array.from(
-      new Set(source.map((d) => d.progress_per_24_agustus_2026).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b));
-  }, [data, areaFilter, opdFilter]);
+  // Pilihan Progress sekarang tetap 4 kategori sesuai Keterangan Warna
+  // (Diterima / Dalam Proses / Perlu Perbaikan / Melewati Waktu), bukan lagi teks mentah dari data
+  const progressOptions = useMemo(() => STATUS_LEGEND.map((l) => l.key), []);
 
   const handleAreaChange = (value: string) => {
     setHasInteracted(true);
     setAreaFilter(value);
-    // reset OPD & Progress saat area berubah, karena daftar pilihannya ikut berubah
+    // reset OPD saat area berubah, karena daftar pilihan OPD ikut berubah
     setOpdFilter("");
-    setProgressFilter("");
   };
 
   const handleOpdChange = (value: string) => {
     setHasInteracted(true);
     setOpdFilter(value);
-    // reset Progress saat OPD berubah, karena daftar pilihannya ikut berubah
-    setProgressFilter("");
   };
 
   const handleProgressChange = (value: string) => {
@@ -184,7 +174,9 @@ export default function ProgresDokumenPage() {
       const matchesArea = areaFilter === "" ? true : item.area_intervensi === areaFilter;
       const matchesOpd = opdFilter === "" ? true : item.opd === opdFilter;
       const matchesProgress =
-        progressFilter === "" ? true : item.progress_per_24_agustus_2026 === progressFilter;
+        progressFilter === ""
+          ? true
+          : classifyStatus(item.progress_per_24_agustus_2026) === progressFilter;
 
       return matchesSearch && matchesArea && matchesOpd && matchesProgress;
     });
@@ -378,7 +370,10 @@ export default function ProgresDokumenPage() {
               placeholder="Semua Progress"
               options={progressOptions}
               onChange={handleProgressChange}
-              getOptionColor={(opt) => STATUS_HEX[classifyStatus(opt)]}
+              getOptionColor={(opt) => STATUS_HEX[opt as StatusKey]}
+              getOptionLabel={(opt) =>
+                STATUS_LEGEND.find((l) => l.key === opt)?.label ?? opt
+              }
             />
           </div>
 
@@ -559,6 +554,7 @@ function ColorSelect({
   options,
   onChange,
   getOptionColor,
+  getOptionLabel,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -567,10 +563,13 @@ function ColorSelect({
   options: string[];
   onChange: (value: string) => void;
   getOptionColor: (option: string) => { bg: string; text: string; border: string } | undefined;
+  // Opsional: ubah tampilan teks sebuah opsi (mis. dari kode kategori jadi label yang lebih jelas)
+  getOptionLabel?: (option: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedColor = value ? getOptionColor(value) : undefined;
+  const displayLabel = (opt: string) => getOptionLabel?.(opt) ?? opt;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -596,7 +595,7 @@ function ColorSelect({
           selectedColor ? "" : value ? "border-indigo-300 text-indigo-700" : "border-slate-200 text-slate-500 font-medium"
         }`}
       >
-        <span className="truncate">{value || placeholder}</span>
+        <span className="truncate">{value ? displayLabel(value) : placeholder}</span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
           style={{ color: selectedColor ? selectedColor.text : undefined }}
@@ -628,7 +627,7 @@ function ColorSelect({
                 style={c ? { color: c.text } : undefined}
                 className="block w-full px-3 py-2 text-left text-sm font-semibold hover:bg-slate-50"
               >
-                {opt}
+                {displayLabel(opt)}
               </button>
             );
           })}
