@@ -112,11 +112,16 @@ export default function ProgresDokumenPage() {
   // "" berarti tidak membatasi data berdasarkan kolom ini (mis. "Semua Area Intervensi")
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
+<<<<<<< HEAD
   // Filter baru: berdasarkan kolom "Progress per 24 Agustus 2026"
   const [progressFilter, setProgressFilter] = useState<string>("");
   // Menandai apakah user sudah pernah berinteraksi (ketik cari / pilih dropdown apapun,
   // termasuk memilih "Semua ..."), supaya bisa dibedakan dari kondisi awal belum pilih apa-apa
   const [hasInteracted, setHasInteracted] = useState<boolean>(false);
+=======
+  // Menu filter ketiga — disiapkan untuk kebutuhan filter berikutnya, isinya masih kosong
+  const [allFilter, setAllFilter] = useState<string>("");
+>>>>>>> 097fb0d (first commit)
 
   // Daftar pilihan Area Intervensi, unik & terurut abjad
   const areaOptions = useMemo(() => {
@@ -134,9 +139,14 @@ export default function ProgresDokumenPage() {
     );
   }, [data, areaFilter]);
 
+<<<<<<< HEAD
   // Pilihan Progress sekarang tetap 4 kategori sesuai Keterangan Warna
   // (Diterima / Dalam Proses / Perlu Perbaikan / Melewati Waktu), bukan lagi teks mentah dari data
   const progressOptions = useMemo(() => STATUS_LEGEND.map((l) => l.key), []);
+=======
+  // Daftar pilihan untuk menu filter ketiga — sengaja dikosongkan dulu
+  const allOptions = useMemo(() => [] as string[], []);
+>>>>>>> 097fb0d (first commit)
 
   const handleAreaChange = (value: string) => {
     setHasInteracted(true);
@@ -182,9 +192,14 @@ export default function ProgresDokumenPage() {
     });
   }, [data, searchTerm, areaFilter, opdFilter, progressFilter]);
 
+<<<<<<< HEAD
   // Tabel ditampilkan begitu user pernah berinteraksi (ketik cari / pilih dropdown apapun),
   // termasuk saat memilih "Semua ..." yang nilainya kembali kosong
   const isFiltering = hasInteracted;
+=======
+  const isFiltering =
+    searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "" || allFilter !== "";
+>>>>>>> 097fb0d (first commit)
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -216,8 +231,12 @@ export default function ProgresDokumenPage() {
     setSearchTerm("");
     setAreaFilter("");
     setOpdFilter("");
+<<<<<<< HEAD
     setProgressFilter("");
     setHasInteracted(false);
+=======
+    setAllFilter("");
+>>>>>>> 097fb0d (first commit)
   };
 
   return (
@@ -345,8 +364,21 @@ export default function ProgresDokumenPage() {
             </button> */}
           </div>
 
+<<<<<<< HEAD
           {/* Filter Dropdown — Area Intervensi, OPD, Progress */}
           <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
+=======
+          {/* Filter Dropdown — Semua (menu ketiga) ditaruh di awal, lalu Area Intervensi & OPD */}
+          <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
+            {/* <FilterSelect
+              icon={<ListFilter className="h-4 w-4" />}
+              label="Filter Semua"
+              value={allFilter}
+              placeholder="Semua"
+              options={allOptions}
+              onChange={setAllFilter}
+            /> */}
+>>>>>>> 097fb0d (first commit)
             <FilterSelect
               icon={<Layers className="h-4 w-4" />}
               label="Filter Area Intervensi"
@@ -400,9 +432,14 @@ export default function ProgresDokumenPage() {
             </h3>
             <p className="mx-auto max-w-md text-sm text-slate-500">
               Silakan ketikkan kata kunci pada kolom pencarian, atau pilih{" "}
+<<<<<<< HEAD
               <strong className="text-slate-700">Area Intervensi</strong>,{" "}
               <strong className="text-slate-700">OPD</strong>, atau{" "}
               <strong className="text-slate-700">Progress</strong> pada menu filter di atas.
+=======
+              <strong className="text-slate-700">Area Intervensi</strong> /{" "}
+              <strong className="text-slate-700">OPD</strong> pada menu filter di atas.
+>>>>>>> 097fb0d (first commit)
             </p>
           </div>
         )}
