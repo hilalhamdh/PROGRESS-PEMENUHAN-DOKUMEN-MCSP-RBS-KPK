@@ -15,7 +15,7 @@ import {
   ListFilter,
 } from "lucide-react";
 
-// Data sumber (hasil konversi PROGRES_per_24_Agustus_2026.xlsx)
+// Data sumber (hasil konversi PROGRES_per_8_September_2026.xlsx)
 import RAW_DATA from "./data/progres-data.json";
 
 export interface ProgresRecord {
@@ -25,6 +25,7 @@ export interface ProgresRecord {
   data_dokumen_yg_diperlukan: string;
   komitmen_berita_acara_13_agustus_2026: string;
   progress_per_24_agustus_2026: string;
+  progress_per_8_september_2026: string;
 }
 
 // Kategori status dipakai untuk mewarnai badge di kolom Progress,
@@ -112,16 +113,11 @@ export default function ProgresDokumenPage() {
   // "" berarti tidak membatasi data berdasarkan kolom ini (mis. "Semua Area Intervensi")
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
-<<<<<<< HEAD
-  // Filter baru: berdasarkan kolom "Progress per 24 Agustus 2026"
+  // Filter berdasarkan kolom "Progress per 8 September 2026" (progress terbaru)
   const [progressFilter, setProgressFilter] = useState<string>("");
   // Menandai apakah user sudah pernah berinteraksi (ketik cari / pilih dropdown apapun,
   // termasuk memilih "Semua ..."), supaya bisa dibedakan dari kondisi awal belum pilih apa-apa
   const [hasInteracted, setHasInteracted] = useState<boolean>(false);
-=======
-  // Menu filter ketiga — disiapkan untuk kebutuhan filter berikutnya, isinya masih kosong
-  const [allFilter, setAllFilter] = useState<string>("");
->>>>>>> 097fb0d (first commit)
 
   // Daftar pilihan Area Intervensi, unik & terurut abjad
   const areaOptions = useMemo(() => {
@@ -139,14 +135,9 @@ export default function ProgresDokumenPage() {
     );
   }, [data, areaFilter]);
 
-<<<<<<< HEAD
   // Pilihan Progress sekarang tetap 4 kategori sesuai Keterangan Warna
   // (Diterima / Dalam Proses / Perlu Perbaikan / Melewati Waktu), bukan lagi teks mentah dari data
   const progressOptions = useMemo(() => STATUS_LEGEND.map((l) => l.key), []);
-=======
-  // Daftar pilihan untuk menu filter ketiga — sengaja dikosongkan dulu
-  const allOptions = useMemo(() => [] as string[], []);
->>>>>>> 097fb0d (first commit)
 
   const handleAreaChange = (value: string) => {
     setHasInteracted(true);
@@ -179,27 +170,23 @@ export default function ProgresDokumenPage() {
           : item.area_intervensi?.toLowerCase().includes(q) ||
             item.opd?.toLowerCase().includes(q) ||
             item.data_dokumen_yg_diperlukan?.toLowerCase().includes(q) ||
-            item.progress_per_24_agustus_2026?.toLowerCase().includes(q);
+            item.progress_per_24_agustus_2026?.toLowerCase().includes(q) ||
+            item.progress_per_8_september_2026?.toLowerCase().includes(q);
 
       const matchesArea = areaFilter === "" ? true : item.area_intervensi === areaFilter;
       const matchesOpd = opdFilter === "" ? true : item.opd === opdFilter;
       const matchesProgress =
         progressFilter === ""
           ? true
-          : classifyStatus(item.progress_per_24_agustus_2026) === progressFilter;
+          : classifyStatus(item.progress_per_8_september_2026) === progressFilter;
 
       return matchesSearch && matchesArea && matchesOpd && matchesProgress;
     });
   }, [data, searchTerm, areaFilter, opdFilter, progressFilter]);
 
-<<<<<<< HEAD
   // Tabel ditampilkan begitu user pernah berinteraksi (ketik cari / pilih dropdown apapun),
   // termasuk saat memilih "Semua ..." yang nilainya kembali kosong
   const isFiltering = hasInteracted;
-=======
-  const isFiltering =
-    searchTerm.trim().length > 0 || areaFilter !== "" || opdFilter !== "" || allFilter !== "";
->>>>>>> 097fb0d (first commit)
 
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
@@ -211,6 +198,7 @@ export default function ProgresDokumenPage() {
       "DATA / DOKUMEN YG DIPERLUKAN": d.data_dokumen_yg_diperlukan,
       "KOMITMEN BERITA ACARA 13 AGUSTUS 2026": d.komitmen_berita_acara_13_agustus_2026,
       "PROGRESS PER 24 AGUSTUS 2026": d.progress_per_24_agustus_2026,
+      "PROGRESS PER 8 SEPTEMBER 2026": d.progress_per_8_september_2026,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
@@ -220,6 +208,7 @@ export default function ProgresDokumenPage() {
       { wch: 22 },
       { wch: 45 },
       { wch: 28 },
+      { wch: 32 },
       { wch: 32 },
     ];
     const workbook = XLSX.utils.book_new();
@@ -231,12 +220,8 @@ export default function ProgresDokumenPage() {
     setSearchTerm("");
     setAreaFilter("");
     setOpdFilter("");
-<<<<<<< HEAD
     setProgressFilter("");
     setHasInteracted(false);
-=======
-    setAllFilter("");
->>>>>>> 097fb0d (first commit)
   };
 
   return (
@@ -279,7 +264,7 @@ export default function ProgresDokumenPage() {
                   <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
                 </h1>
                 <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
-                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 24 Agustus 2026"}
+                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 8 September 2026"}
                 </p>
               </div>
             </div>
@@ -364,21 +349,8 @@ export default function ProgresDokumenPage() {
             </button> */}
           </div>
 
-<<<<<<< HEAD
           {/* Filter Dropdown — Area Intervensi, OPD, Progress */}
           <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
-=======
-          {/* Filter Dropdown — Semua (menu ketiga) ditaruh di awal, lalu Area Intervensi & OPD */}
-          <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
-            {/* <FilterSelect
-              icon={<ListFilter className="h-4 w-4" />}
-              label="Filter Semua"
-              value={allFilter}
-              placeholder="Semua"
-              options={allOptions}
-              onChange={setAllFilter}
-            /> */}
->>>>>>> 097fb0d (first commit)
             <FilterSelect
               icon={<Layers className="h-4 w-4" />}
               label="Filter Area Intervensi"
@@ -397,7 +369,7 @@ export default function ProgresDokumenPage() {
             />
             <ColorSelect
               icon={<ListFilter className="h-4 w-4" />}
-              label="Filter Progress per 24 Agustus 2026"
+              label="Filter Progress per 8 September 2026"
               value={progressFilter}
               placeholder="Semua Progress"
               options={progressOptions}
@@ -432,14 +404,9 @@ export default function ProgresDokumenPage() {
             </h3>
             <p className="mx-auto max-w-md text-sm text-slate-500">
               Silakan ketikkan kata kunci pada kolom pencarian, atau pilih{" "}
-<<<<<<< HEAD
               <strong className="text-slate-700">Area Intervensi</strong>,{" "}
               <strong className="text-slate-700">OPD</strong>, atau{" "}
               <strong className="text-slate-700">Progress</strong> pada menu filter di atas.
-=======
-              <strong className="text-slate-700">Area Intervensi</strong> /{" "}
-              <strong className="text-slate-700">OPD</strong> pada menu filter di atas.
->>>>>>> 097fb0d (first commit)
             </p>
           </div>
         )}
@@ -452,7 +419,7 @@ export default function ProgresDokumenPage() {
             onScroll={handleTableScroll}
             className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
           >
-            <table className="w-full min-w-[1150px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1350px] border-collapse text-left text-xs">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 text-[11px] font-extrabold uppercase tracking-wide text-indigo-800">
                   <th className="whitespace-nowrap border-b-2 border-indigo-100 px-4 py-3.5 text-left">
@@ -475,12 +442,15 @@ export default function ProgresDokumenPage() {
                   <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
                     Progress per 24 Agustus 2026
                   </th>
+                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
+                    Progress per 8 September 2026
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center">
+                    <td colSpan={7} className="p-12 text-center">
                       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
                         <Info className="h-6 w-6" />
                       </div>
@@ -494,7 +464,7 @@ export default function ProgresDokumenPage() {
                   </tr>
                 ) : (
                   filteredData.map((row, idx) => {
-                    const kategori = classifyStatus(row.progress_per_24_agustus_2026);
+                    const kategori = classifyStatus(row.progress_per_8_september_2026);
                     const cfg = STATUS_CONFIG[kategori];
                     return (
                       <tr
@@ -516,12 +486,15 @@ export default function ProgresDokumenPage() {
                         <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-600">
                           {row.komitmen_berita_acara_13_agustus_2026}
                         </td>
+                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
+                          {row.progress_per_24_agustus_2026}
+                        </td>
                         <td className="max-w-[260px] px-4 py-3 align-top">
                           <span
                             className={`inline-flex items-center gap-1.5 whitespace-pre-line rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${cfg.badge}`}
                           >
                             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${cfg.dot}`} />
-                            {row.progress_per_24_agustus_2026}
+                            {row.progress_per_8_september_2026}
                           </span>
                         </td>
                       </tr>
