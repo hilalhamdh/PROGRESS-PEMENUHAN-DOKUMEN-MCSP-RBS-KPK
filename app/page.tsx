@@ -58,7 +58,9 @@ function classifyStatus(progress: string): StatusKey {
     t.includes("DALAM PROSES") ||
     t.includes("SEBAGIAN DATA") ||
     t.includes("SEBAGIAN DOKUMEN") ||
-    t.includes("REVIU")
+    t.includes("REVIU") ||
+    t.includes("PEMANTAUAN TINDAK LANJUT") ||
+    t.includes("PROSES PEMANTAUAN")
   )
     return "PROSES";
   return "LAINNYA";
