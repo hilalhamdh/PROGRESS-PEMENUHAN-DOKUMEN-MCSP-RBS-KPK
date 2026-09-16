@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -15,7 +16,7 @@ import {
   ListFilter,
 } from "lucide-react";
 
-// Data sumber (hasil konversi PROGRES_per_8_September_2026.xlsx)
+// Data sumber (hasil konversi PROGRES_per_15_September_2026.xlsx)
 import RAW_DATA from "./data/progres-data.json";
 
 export interface ProgresRecord {
@@ -26,6 +27,8 @@ export interface ProgresRecord {
   komitmen_berita_acara_13_agustus_2026: string;
   progress_per_24_agustus_2026: string;
   progress_per_8_september_2026: string;
+  progress_per_15_september_2026: string;
+  keterangan_hambatan: string;
 }
 
 // Kategori status dipakai untuk mewarnai badge di kolom Progress,
@@ -48,7 +51,8 @@ function classifyStatus(progress: string): StatusKey {
     t.includes("TERLAMBAT") ||
     t.includes("BELUM ADA") ||
     t.includes("MENUNGGU TANDA TANGAN") ||
-    t.includes("SURAT PERNYATAAN BELUM DI TERIMA")
+    t.includes("SURAT PERNYATAAN BELUM DI TERIMA") ||
+    t.includes("TIDAK TERSEDIA")
   )
     return "TERLAMBAT";
   if (t.includes("PERBAIKAN") || t.includes("PERLU PERBAIKAN") || t.includes("SUDAH ADA"))
@@ -115,7 +119,7 @@ export default function ProgresDokumenPage() {
   // "" berarti tidak membatasi data berdasarkan kolom ini (mis. "Semua Area Intervensi")
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [opdFilter, setOpdFilter] = useState<string>("");
-  // Filter berdasarkan kolom "Progress per 8 September 2026" (progress terbaru)
+  // Filter berdasarkan kolom "Progress per 15 September 2026" (progress terbaru)
   const [progressFilter, setProgressFilter] = useState<string>("");
   // Menandai apakah user sudah pernah berinteraksi (ketik cari / pilih dropdown apapun,
   // termasuk memilih "Semua ..."), supaya bisa dibedakan dari kondisi awal belum pilih apa-apa
@@ -173,14 +177,15 @@ export default function ProgresDokumenPage() {
             item.opd?.toLowerCase().includes(q) ||
             item.data_dokumen_yg_diperlukan?.toLowerCase().includes(q) ||
             item.progress_per_24_agustus_2026?.toLowerCase().includes(q) ||
-            item.progress_per_8_september_2026?.toLowerCase().includes(q);
+            item.progress_per_8_september_2026?.toLowerCase().includes(q) ||
+            item.progress_per_15_september_2026?.toLowerCase().includes(q);
 
       const matchesArea = areaFilter === "" ? true : item.area_intervensi === areaFilter;
       const matchesOpd = opdFilter === "" ? true : item.opd === opdFilter;
       const matchesProgress =
         progressFilter === ""
           ? true
-          : classifyStatus(item.progress_per_8_september_2026) === progressFilter;
+          : classifyStatus(item.progress_per_15_september_2026) === progressFilter;
 
       return matchesSearch && matchesArea && matchesOpd && matchesProgress;
     });
@@ -201,6 +206,8 @@ export default function ProgresDokumenPage() {
       "KOMITMEN BERITA ACARA 13 AGUSTUS 2026": d.komitmen_berita_acara_13_agustus_2026,
       "PROGRESS PER 24 AGUSTUS 2026": d.progress_per_24_agustus_2026,
       "PROGRESS PER 8 SEPTEMBER 2026": d.progress_per_8_september_2026,
+      "PROGRESS PER 15 SEPTEMBER 2026": d.progress_per_15_september_2026,
+      "KETERANGAN HAMBATAN / KENDALA": d.keterangan_hambatan,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
@@ -210,6 +217,8 @@ export default function ProgresDokumenPage() {
       { wch: 22 },
       { wch: 45 },
       { wch: 28 },
+      { wch: 32 },
+      { wch: 32 },
       { wch: 32 },
       { wch: 32 },
     ];
@@ -227,8 +236,8 @@ export default function ProgresDokumenPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#eef2ff_0%,_#f8fafc_45%,_#f8fafc_100%)] px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-[1500px] space-y-5">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#eef2ff_0%,_#f8fafc_45%,_#f8fafc_100%)] px-4 py-8 md:px-6 lg:px-10">
+      <div className="mx-auto w-full max-w-[1920px] space-y-5">
         {/* Header Section — Kop Surat + Hero judul */}
         <div className="overflow-hidden rounded-lg border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_40px_-20px_rgba(79,70,229,0.25)]">
           {/* Kop surat */}
@@ -266,7 +275,7 @@ export default function ProgresDokumenPage() {
                   <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
                 </h1>
                 <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
-                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 8 September 2026"}
+                  {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 15 September 2026"}
                 </p>
               </div>
             </div>
@@ -371,7 +380,7 @@ export default function ProgresDokumenPage() {
             />
             <ColorSelect
               icon={<ListFilter className="h-4 w-4" />}
-              label="Filter Progress per 8 September 2026"
+              label="Filter Progress per 15 September 2026"
               value={progressFilter}
               placeholder="Semua Progress"
               options={progressOptions}
@@ -421,7 +430,7 @@ export default function ProgresDokumenPage() {
             onScroll={handleTableScroll}
             className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
           >
-            <table className="w-full min-w-[1350px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1750px] border-collapse text-left text-xs">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 text-[11px] font-extrabold uppercase tracking-wide text-indigo-800">
                   <th className="whitespace-nowrap border-b-2 border-indigo-100 px-4 py-3.5 text-left">
@@ -447,12 +456,20 @@ export default function ProgresDokumenPage() {
                   <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
                     Progress per 8 September 2026
                   </th>
+                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
+                    Progress per 15 September 2026
+                  </th>
+                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
+                    Keterangan
+                    <br />
+                    Hambatan / Kendala
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-12 text-center">
+                    <td colSpan={9} className="p-12 text-center">
                       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
                         <Info className="h-6 w-6" />
                       </div>
@@ -466,7 +483,7 @@ export default function ProgresDokumenPage() {
                   </tr>
                 ) : (
                   filteredData.map((row, idx) => {
-                    const kategori = classifyStatus(row.progress_per_8_september_2026);
+                    const kategori = classifyStatus(row.progress_per_15_september_2026);
                     const cfg = STATUS_CONFIG[kategori];
                     return (
                       <tr
@@ -491,13 +508,19 @@ export default function ProgresDokumenPage() {
                         <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
                           {row.progress_per_24_agustus_2026}
                         </td>
+                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
+                          {row.progress_per_8_september_2026}
+                        </td>
                         <td className="max-w-[260px] px-4 py-3 align-top">
                           <span
                             className={`inline-flex items-center gap-1.5 whitespace-pre-line rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${cfg.badge}`}
                           >
                             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${cfg.dot}`} />
-                            {row.progress_per_8_september_2026}
+                            {row.progress_per_15_september_2026}
                           </span>
+                        </td>
+                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
+                          {row.keterangan_hambatan || "-"}
                         </td>
                       </tr>
                     );
