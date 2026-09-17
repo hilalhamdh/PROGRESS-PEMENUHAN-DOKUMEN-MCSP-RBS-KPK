@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -198,15 +197,13 @@ export default function ProgresDokumenPage() {
   const exportToExcel = () => {
     if (filteredData.length === 0) return;
 
+    // Kolom export Excel disesuaikan: hanya kolom yang masih ditampilkan di tabel
     const exportRows = filteredData.map((d) => ({
       NO: d.no,
       "AREA INTERVENSI": d.area_intervensi,
       OPD: d.opd,
       "DATA / DOKUMEN YG DIPERLUKAN": d.data_dokumen_yg_diperlukan,
-      "KOMITMEN BERITA ACARA 13 AGUSTUS 2026": d.komitmen_berita_acara_13_agustus_2026,
-      "PROGRESS PER 24 AGUSTUS 2026": d.progress_per_24_agustus_2026,
-      "PROGRESS PER 8 SEPTEMBER 2026": d.progress_per_8_september_2026,
-      "PROGRESS PER 15 SEPTEMBER 2026": d.progress_per_15_september_2026,
+      "HASIL MONEV (PROGRESS PER 15 SEPTEMBER 2026)": d.progress_per_15_september_2026,
       "KETERANGAN HAMBATAN / KENDALA": d.keterangan_hambatan,
     }));
 
@@ -216,9 +213,6 @@ export default function ProgresDokumenPage() {
       { wch: 28 },
       { wch: 22 },
       { wch: 45 },
-      { wch: 28 },
-      { wch: 32 },
-      { wch: 32 },
       { wch: 32 },
       { wch: 32 },
     ];
@@ -237,7 +231,7 @@ export default function ProgresDokumenPage() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#eef2ff_0%,_#f8fafc_45%,_#f8fafc_100%)] px-4 py-8 md:px-6 lg:px-10">
-      <div className="mx-auto w-full max-w-[1920px] space-y-5">
+      <div className="mx-auto w-full max-w-[1500px] space-y-5">
         {/* Header Section — Kop Surat + Hero judul */}
         <div className="overflow-hidden rounded-lg border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_40px_-20px_rgba(79,70,229,0.25)]">
           {/* Kop surat */}
@@ -271,12 +265,12 @@ export default function ProgresDokumenPage() {
               </div>
               <div>
                 <h1 className="text-lg font-extrabold leading-snug tracking-tight text-white sm:text-xl md:text-2xl">
-                  Progress Pemenuhan Dokumen MCSP-RBS KPK
-                  <br className="hidden sm:block" /> Kabupaten Deiyai Tahun 2026
+                  MONEV PEMENUHAN DOKUMEN MCSP-RBS KPK
+                  <br className="hidden sm:block" /> KABUPATEN DEIYAI TAHUN 2026
                 </h1>
-                <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
+                {/* <p className="mt-1 text-xs font-medium text-indigo-100 sm:text-sm">
                   {rawJson.per_tanggal ? `Per ${rawJson.per_tanggal}` : "Per 15 September 2026"}
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -430,7 +424,7 @@ export default function ProgresDokumenPage() {
             onScroll={handleTableScroll}
             className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
           >
-            <table className="w-full min-w-[1750px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1200px] border-collapse text-left text-xs">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 text-[11px] font-extrabold uppercase tracking-wide text-indigo-800">
                   <th className="whitespace-nowrap border-b-2 border-indigo-100 px-4 py-3.5 text-left">
@@ -446,18 +440,7 @@ export default function ProgresDokumenPage() {
                     Data / Dokumen yang Diperlukan
                   </th>
                   <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
-                    Komitmen Berita Acara
-                    <br />
-                    13 Agustus 2026
-                  </th>
-                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
-                    Progress per 24 Agustus 2026
-                  </th>
-                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
-                    Progress per 8 September 2026
-                  </th>
-                  <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
-                    Progress per 15 September 2026
+                    HASIL MONEV
                   </th>
                   <th className="border-b-2 border-indigo-100 px-4 py-3.5 text-left">
                     Keterangan
@@ -469,7 +452,7 @@ export default function ProgresDokumenPage() {
               <tbody className="divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-12 text-center">
+                    <td colSpan={6} className="p-12 text-center">
                       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
                         <Info className="h-6 w-6" />
                       </div>
@@ -501,15 +484,6 @@ export default function ProgresDokumenPage() {
                         </td>
                         <td className="max-w-[320px] px-4 py-3 align-top whitespace-pre-line text-slate-700">
                           {row.data_dokumen_yg_diperlukan}
-                        </td>
-                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-600">
-                          {row.komitmen_berita_acara_13_agustus_2026}
-                        </td>
-                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
-                          {row.progress_per_24_agustus_2026}
-                        </td>
-                        <td className="max-w-[220px] px-4 py-3 align-top whitespace-pre-line text-slate-500">
-                          {row.progress_per_8_september_2026}
                         </td>
                         <td className="max-w-[260px] px-4 py-3 align-top">
                           <span
